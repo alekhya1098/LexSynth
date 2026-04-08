@@ -101,8 +101,8 @@ async def status():
     except Exception: count = 0
     return {
         "status": "ok",
-        "vector_db": "chromadb",
-        "embed_model": os.getenv("EMBED_MODEL", "BAAI/bge-m3"),
+        "vector_db": "pure-python (numpy)",
+        "embed_model": "bag-of-words (no external model)",
         "llm_model": os.getenv("LLM_MODEL", "llama-3.3-70b-versatile"),
         "indexed_chunks": count,
         "rag_available": RAG_AVAILABLE,
