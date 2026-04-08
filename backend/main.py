@@ -8,8 +8,16 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from rag import retrieve, collection_count, add_documents
-from ingest import ingest_for_query
+try:
+    from rag import retrieve, collection_count, add_documents
+    from ingest import ingest_for_query
+    RAG_AVAILABLE = True
+except Exception as e:
+    print(f"[RAG] Unavailable: {e}")
+    RAG_AVAILABLE = False
+    def retrieve(*a, **k): return []
+    def collection_count(): return 0
+    async def ingest_for_query(*a, **k): return {"indexed": 0, "errors": ["RAG unavailable"]}
 from llm import call_llm, build_angle_prompt, build_memo_prompt, build_accuracy_prompt, get_client
 from evaluate import evaluate_rag
 from history import save_session, list_sessions, get_session, delete_session
@@ -97,6 +105,7 @@ async def status():
         "embed_model": os.getenv("EMBED_MODEL", "BAAI/bge-m3"),
         "llm_model": os.getenv("LLM_MODEL", "llama-3.3-70b-versatile"),
         "indexed_chunks": count,
+        "rag_available": RAG_AVAILABLE,
     }
 
 # ── Ingest ───────────────────────────────────────────────────────────────────
