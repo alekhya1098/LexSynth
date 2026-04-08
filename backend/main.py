@@ -2,6 +2,7 @@
 LexSynth Backend — FastAPI v3
 New: WebSocket streaming, SQLite history, contradiction detection, dedup
 """
+from __future__ import annotations
 import json, asyncio, os, re
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -18,6 +19,7 @@ except Exception as e:
     def retrieve(*a, **k): return []
     def collection_count(): return 0
     async def ingest_for_query(*a, **k): return {"indexed": 0, "errors": ["RAG unavailable"]}
+
 from llm import call_llm, build_angle_prompt, build_memo_prompt, build_accuracy_prompt, get_client
 from evaluate import evaluate_rag
 from history import save_session, list_sessions, get_session, delete_session
