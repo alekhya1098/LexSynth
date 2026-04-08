@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LexSynth — Legal Research Synthesizer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="header-row">
+        <div class="logo">⚖️ LexSynth</div>
+        <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+      </div>
+      <p class="tagline">Multi-angle legal research, synthesized into a structured memo</p>
+    </header>
+
+    <section id="config-panel">
+      <details id="settings-details">
+        <summary>⚙️ API Settings</summary>
+        <div class="settings-grid">
+          <label>
+            API Base URL
+            <input id="api-base" type="text" placeholder="https://api.groq.com/openai/v1" />
+          </label>
+          <label>
+            API Key
+            <input id="api-key" type="password" placeholder="gsk_..." />
+          </label>
+          <label>
+            Model
+            <input id="model-name" type="text" placeholder="llama-3.1-8b-instant" />
+          </label>
+          <label>
+            Search API Key (Serper.dev)
+            <input id="search-key" type="password" placeholder="Your Serper API key" />
+          </label>
+        </div>
+        <div class="settings-footer">
+          <label class="save-key-label">
+            <input type="checkbox" id="persist-key" />
+            Remember API key (localStorage)
+          </label>
+          <p class="hint">Keys sent only to configured API endpoints.</p>
+        </div>
+      </details>
+    </section>
+
+    <section id="query-section">
+      <!-- Mode toggle -->
+      <div id="mode-toggle-bar">
+        <button class="mode-btn active" id="mode-single" onclick="setMode('single')">🔍 Single Question</button>
+        <button class="mode-btn" id="mode-compare" onclick="setMode('compare')">⚖️ Compare Two Questions</button>
+      </div>
+
+      <!-- Single mode -->
+      <div id="single-mode">
+        <div class="query-box">
+          <div class="textarea-wrap">
+          <textarea id="legal-question" placeholder="Enter your legal question, e.g. 'Can an employer monitor employee emails on company devices without consent in California?'" rows="3" oninput="autoDetectJurisdiction(this.value)"></textarea>
+        </div>
+          <div class="query-controls">
+            <select id="jurisdiction">
+              <option value="general">General / Federal (US)</option>
+              <option value="california">California</option>
+              <option value="new-york">New York</option>
+              <option value="texas">Texas</option>
+              <option value="florida">Florida</option>
+              <option value="uk">United Kingdom</option>
+              <option value="eu">European Union</option>
+              <option value="canada">Canada</option>
+              <option value="australia">Australia</option>
+            </select>
+            <button id="research-btn" onclick="startResearch()">
+              <span id="btn-text">🔍 Research</span>
+              <span id="btn-spinner" class="spinner hidden"></span>
+            </button>
+            <button id="mic-btn" onclick="toggleSpeech()" title="Speak your question" aria-label="Voice input">🎤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compare mode -->
+      <div id="compare-mode" class="hidden">
+        <div class="compare-inputs">
+          <div class="compare-input-card">
+            <div class="compare-label">Question A</div>
+            <textarea id="compare-q1" placeholder="First legal question..." rows="3"></textarea>
+            <select id="compare-j1">
+              <option value="general">General / Federal (US)</option>
+              <option value="california">California</option>
+              <option value="new-york">New York</option>
+              <option value="texas">Texas</option>
+              <option value="florida">Florida</option>
+              <option value="uk">United Kingdom</option>
+              <option value="eu">European Union</option>
+              <option value="canada">Canada</option>
+              <option value="australia">Australia</option>
+            </select>
+          </div>
+          <div class="compare-vs">VS</div>
+          <div class="compare-input-card">
+            <div class="compare-label">Question B</div>
+            <textarea id="compare-q2" placeholder="Second legal question..." rows="3"></textarea>
+            <select id="compare-j2">
+              <option value="general">General / Federal (US)</option>
+              <option value="california">California</option>
+              <option value="new-york">New York</option>
+              <option value="texas">Texas</option>
+              <option value="florida">Florida</option>
+              <option value="uk">United Kingdom</option>
+              <option value="eu">European Union</option>
+              <option value="canada">Canada</option>
+              <option value="australia">Australia</option>
+            </select>
+          </div>
+        </div>
+        <div class="compare-controls">
+          <div id="compare-angle-picker">
+            <span class="angle-picker-label">Research angles:</span>
+            <div id="compare-angle-checkboxes"></div>
+          </div>
+          <button id="compare-btn" onclick="startCompare()">
+            <span id="compare-btn-text">⚖️ Compare Both</span>
+            <span id="compare-spinner" class="spinner hidden"></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skeleton loader -->
+    <div id="skeleton-section" class="hidden">
+      <div class="skeleton-card">
+        <div class="skeleton-line w60"></div>
+        <div class="skeleton-line w100"></div>
+        <div class="skeleton-line w80"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-line w40"></div>
+        <div class="skeleton-line w100"></div>
+        <div class="skeleton-line w90"></div>
+        <div class="skeleton-line w70"></div>
+      </div>
+    </div>
+
+    <section id="progress-section" class="hidden">
+      <div id="progress-steps">
+        <div class="step" id="step-search">
+          <span class="step-icon">🌐</span>
+          <span class="step-label">Searching the web...</span>
+          <span class="step-status"></span>
+        </div>
+        <div class="step" id="step-extract">
+          <span class="step-icon">📄</span>
+          <span class="step-label">Extracting legal sources...</span>
+          <span class="step-status"></span>
+        </div>
+        <div class="step" id="step-angles">
+          <span class="step-icon">🔬</span>
+          <span class="step-label">Analyzing from multiple angles...</span>
+          <span class="step-status"></span>
+          <div class="angle-progress-wrap hidden">
+            <div class="angle-progress-bar"><div id="angle-progress-fill"></div></div>
+            <span id="angle-progress-text"></span>
+          </div>
+        </div>
+        <div class="step" id="step-accuracy">
+          <span class="step-icon">🎯</span>
+          <span class="step-label">Verifying accuracy across sources...</span>
+          <span class="step-status"></span>
+        </div>
+        <div class="step" id="step-memo">
+          <span class="step-icon">📋</span>
+          <span class="step-label">Drafting structured memo...</span>
+          <span class="step-status"></span>
+        </div>
+      </div>
+      <!-- Rate limit queue indicator -->
+      <div id="queue-indicator" class="hidden">
+        <span class="queue-dot"></span>
+        <span id="queue-msg">Waiting for rate limit...</span>
+      </div>
+    </section>
+
+    <div id="history-bar" class="hidden">
+      <button id="history-toggle" onclick="toggleHistory()">🕓 History <span id="history-count"></span></button>
+      <div id="history-panel" class="hidden">
+        <div class="history-header">
+          <span>Recent Queries</span>
+          <button onclick="toggleHistory()" class="history-close">✕</button>
+        </div>
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+    <div id="rag-status-bar" class="hidden">
+      <span id="rag-indicator"></span>
+      <span id="rag-chunks-label"></span>
+      <button id="ingest-btn" onclick="triggerIngest()">⬇️ Ingest Legal Docs</button>
+    </div>
+
+    <section id="results-section" class="hidden">
+      <!-- New Query button -->
+      <div id="new-query-bar">
+        <button id="new-query-btn" onclick="newQuery()">✨ New Query</button>
+      </div>
+
+      <!-- Confidence trend chart -->
+      <div id="trend-panel" class="hidden">
+        <div class="trend-header">
+          <h3>📈 Confidence Trend</h3>
+          <span class="trend-sub">Accuracy scores over your last queries</span>
+        </div>
+        <canvas id="trend-chart" height="120"></canvas>
+      </div>
+      <div id="ragas-panel" class="hidden">
+        <div class="ragas-header">
+          <h3>🧪 RAGAS Evaluation</h3>
+          <button onclick="runEvaluation()" class="action-btn" id="eval-btn">Run Evaluation</button>
+        </div>
+        <div id="ragas-scores"></div>
+        <p class="hint" style="padding:8px 16px 12px">Measures RAG pipeline quality: faithfulness, relevancy, context precision.</p>
+      </div>
+
+      <div id="contradiction-panel" class="hidden">
+        <div class="contradiction-header"><h3>⚡ Contradictions Detected</h3></div>
+        <div id="contradiction-list"></div>
+      </div>
+
+      <div id="accuracy-panel">
+        <div class="accuracy-header">
+          <h3>🎯 Accuracy Assessment</h3>
+          <div id="confidence-badge"></div>
+        </div>
+        <div id="accuracy-verdict"></div>
+        <div id="accuracy-breakdown"></div>
+      </div>
+
+      <div id="sources-panel">
+        <h3>Sources Found</h3>
+        <div id="sources-list"></div>
+      </div>
+
+      <div id="angles-panel">
+        <h3>Research Angles</h3>
+        <div id="angles-tabs"></div>
+        <div id="angles-content"></div>
+      </div>
+
+      <div id="rag-chunks-panel" class="hidden">
+        <h3>📚 RAG Retrieved Documents</h3>
+        <div id="rag-chunks-list"></div>
+      </div>
+
+      <div id="memo-panel">
+        <div class="memo-header">
+          <h3>📋 Legal Research Memo</h3>
+          <div class="memo-actions">
+            <button onclick="copyMemo()" class="action-btn">📋 Copy</button>
+            <button onclick="downloadMemo()" class="action-btn">⬇️ .txt</button>
+            <button onclick="exportPDF()" class="action-btn">🖨️ PDF</button>
+            <button onclick="shareMemo()" class="action-btn">🔗 Share</button>
+            <button onclick="showPlainEnglish()" class="action-btn" id="plain-btn">💬 Plain English</button>
+          </div>
+        </div>
+        <div id="memo-content"></div>
+        <div id="plain-english-panel" class="hidden">
+          <div class="plain-header">💬 Plain English Summary</div>
+          <div id="plain-content"></div>
+        </div>
+        <!-- Follow-up questions -->
+        <div id="followup-panel">
+          <div class="followup-header">💬 Ask a follow-up question</div>
+          <div id="followup-thread"></div>
+          <div class="followup-input-row">
+            <input id="followup-input" type="text" placeholder="e.g. What are the penalties for violating this law?" />
+            <button onclick="sendFollowup()" id="followup-btn">Ask</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="share-modal" class="modal-overlay hidden" onclick="closeShareModal(event)">
+      <div class="modal">
+        <h3>🔗 Share this Memo</h3>
+        <p>Anyone with this link can view the memo. No account needed.</p>
+        <div class="share-link-box">
+          <input id="share-url" type="text" readonly />
+          <button onclick="copyShareLink()" id="copy-link-btn">Copy</button>
+        </div>
+        <p class="hint" style="margin-top:8px">Link encodes the full memo in the URL — no server required.</p>
+        <button class="modal-close" onclick="closeShareModal()">✕ Close</button>
+      </div>
+    </div>
+
+    <div id="error-banner" class="hidden">
+      <span id="error-text"></span>
+      <button onclick="dismissError()">✕</button>
+    </div>
+  </div>
+
+  <div id="print-area" class="hidden"></div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Legal Research Synthesizer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+</html>
