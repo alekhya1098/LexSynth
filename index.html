@@ -48,18 +48,11 @@
     </section>
 
     <section id="query-section">
-      <!-- Mode toggle -->
-      <div id="mode-toggle-bar">
-        <button class="mode-btn active" id="mode-single" onclick="setMode('single')">🔍 Single Question</button>
-        <button class="mode-btn" id="mode-compare" onclick="setMode('compare')">⚖️ Compare Two Questions</button>
-      </div>
-
-      <!-- Single mode -->
       <div id="single-mode">
         <div class="query-box">
           <div class="textarea-wrap">
-          <textarea id="legal-question" placeholder="Enter your legal question, e.g. 'Can an employer monitor employee emails on company devices without consent in California?'" rows="3" oninput="autoDetectJurisdiction(this.value)"></textarea>
-        </div>
+            <textarea id="legal-question" placeholder="Enter your legal question, e.g. 'Can an employer monitor employee emails on company devices without consent in California?'" rows="3" oninput="autoDetectJurisdiction(this.value)"></textarea>
+          </div>
           <div class="query-controls">
             <select id="jurisdiction">
               <option value="general">General / Federal (US)</option>
@@ -78,53 +71,6 @@
             </button>
             <button id="mic-btn" onclick="toggleSpeech()" title="Speak your question" aria-label="Voice input">🎤</button>
           </div>
-        </div>
-      </div>
-
-      <!-- Compare mode -->
-      <div id="compare-mode" class="hidden">
-        <div class="compare-inputs">
-          <div class="compare-input-card">
-            <div class="compare-label">Question A</div>
-            <textarea id="compare-q1" placeholder="First legal question..." rows="3"></textarea>
-            <select id="compare-j1">
-              <option value="general">General / Federal (US)</option>
-              <option value="california">California</option>
-              <option value="new-york">New York</option>
-              <option value="texas">Texas</option>
-              <option value="florida">Florida</option>
-              <option value="uk">United Kingdom</option>
-              <option value="eu">European Union</option>
-              <option value="canada">Canada</option>
-              <option value="australia">Australia</option>
-            </select>
-          </div>
-          <div class="compare-vs">VS</div>
-          <div class="compare-input-card">
-            <div class="compare-label">Question B</div>
-            <textarea id="compare-q2" placeholder="Second legal question..." rows="3"></textarea>
-            <select id="compare-j2">
-              <option value="general">General / Federal (US)</option>
-              <option value="california">California</option>
-              <option value="new-york">New York</option>
-              <option value="texas">Texas</option>
-              <option value="florida">Florida</option>
-              <option value="uk">United Kingdom</option>
-              <option value="eu">European Union</option>
-              <option value="canada">Canada</option>
-              <option value="australia">Australia</option>
-            </select>
-          </div>
-        </div>
-        <div class="compare-controls">
-          <div id="compare-angle-picker">
-            <span class="angle-picker-label">Research angles:</span>
-            <div id="compare-angle-checkboxes"></div>
-          </div>
-          <button id="compare-btn" onclick="startCompare()">
-            <span id="compare-btn-text">⚖️ Compare Both</span>
-            <span id="compare-spinner" class="spinner hidden"></span>
-          </button>
         </div>
       </div>
     </section>
