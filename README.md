@@ -2,6 +2,8 @@
 
 A full-stack AI legal research tool that takes a legal question, searches the web, retrieves relevant case law via RAG, analyzes from multiple angles using IRAC reasoning, and synthesizes everything into a structured legal memo.
 
+Live Application Link: https://lex-synth.vercel.app/
+Video Demo of Application: https://drive.google.com/file/d/19CPwTJ2AoxSqGc9iMViXh2NImjB_DPyl/view?usp=sharing
 ---
 
 ## Architecture
